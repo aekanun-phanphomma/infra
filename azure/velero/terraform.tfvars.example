@@ -1,0 +1,60 @@
+# Copy to terraform.tfvars and adjust. Storage account name must be globally
+# unique (3-24 lowercase alphanumerics).
+
+# --- Target cluster (must already exist) ---------------------------------
+aks_cluster_name        = "aks-prod"
+aks_resource_group_name = "rg-aks-prod"
+
+# --- Where Velero's resources and backups live ---------------------------
+resource_group_name  = "rg-velero-prod"
+location             = "southeastasia"
+storage_account_name = "stveleroprod01"
+container_name       = "velero"
+
+# --- Storage hardening ---------------------------------------------------
+storage_replication_type      = "GRS"
+shared_access_key_enabled     = false
+public_network_access_enabled = true
+
+# Lock the backup account to a private endpoint / known networks:
+# public_network_access_enabled = false
+# network_rules = {
+#   default_action             = "Deny"
+#   ip_rules                   = ["203.0.113.10"]
+#   virtual_network_subnet_ids = ["/subscriptions/.../subnets/snet-aks"]
+# }
+
+# --- Snapshots -----------------------------------------------------------
+# The AKS node resource group is granted snapshot rights automatically. Add
+# resource groups that hold statically-provisioned data disks here:
+# extra_snapshot_scope_ids = ["/subscriptions/.../resourceGroups/rg-data-disks"]
+
+# --- Velero install ------------------------------------------------------
+install_velero               = true
+namespace                    = "velero"
+deploy_node_agent            = true
+default_volumes_to_fs_backup = false
+
+# --- Backup schedules ----------------------------------------------------
+# Leave unset to use the built-in defaults: a daily snapshot backup (30d TTL)
+# and a weekly file-level backup (90d TTL). Override to customise:
+# backup_schedules = {
+#   daily-snapshots = {
+#     schedule         = "0 1 * * *"
+#     ttl              = "720h"
+#     snapshot_volumes = true
+#   }
+#   app-fs-hourly = {
+#     schedule                     = "0 * * * *"
+#     ttl                          = "168h"
+#     included_namespaces          = ["payments", "orders"]
+#     snapshot_volumes             = false
+#     default_volumes_to_fs_backup = true
+#   }
+# }
+
+tags = {
+  environment = "production"
+  managed_by  = "terraform"
+  workload    = "velero-backup"
+}
