@@ -1,0 +1,54 @@
+###############################################################################
+# Copy to terraform.tfvars and adjust. Required values have no default.
+###############################################################################
+
+resource_group_name = "rg-aks-prod"
+location            = "southeastasia"
+cluster_name        = "aks-prod"
+kubernetes_version  = "1.30"
+
+# Bring-your-own VNet subnets (required).
+nodes_subnet_id = "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/virtualNetworks/<vnet>/subnets/snet-aks-system"
+user_subnet_id  = "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/virtualNetworks/<vnet>/subnets/snet-aks-user"
+
+service_cidr        = "172.16.0.0/16"
+dns_service_ip      = "172.16.0.10"
+private_dns_zone_id = "System"
+
+# Entra ID groups granted cluster-admin.
+admin_group_object_ids = [
+  "00000000-0000-0000-0000-000000000000",
+]
+
+# System pool
+system_node_vm_size   = "Standard_D4s_v5"
+system_node_min_count = 3
+system_node_max_count = 6
+system_node_zones     = ["1", "2", "3"]
+
+# User pool
+user_node_vm_size   = "Standard_D8s_v5"
+user_node_min_count = 2
+user_node_max_count = 20
+user_node_zones     = ["1", "2", "3"]
+
+# Disk encryption (customer-managed key)
+enable_disk_encryption_set         = true
+key_vault_purge_protection_enabled = true
+
+# Observability
+create_log_analytics_workspace = true
+
+# Helm platform add-ons. Set false for the very first apply if the runner
+# cannot yet reach the private API server, then re-enable.
+enable_helm_releases              = true
+istio_version                     = "1.23.2"
+external_dns_version              = "1.15.0"
+external_dns_domain_filters       = ["example.com"]
+external_dns_azure_resource_group = "rg-dns"
+
+tags = {
+  environment = "production"
+  managed_by  = "terraform"
+  workload    = "platform"
+}
