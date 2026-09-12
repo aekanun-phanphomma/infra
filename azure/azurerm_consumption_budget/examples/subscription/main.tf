@@ -1,8 +1,22 @@
 ###############################################################################
-# Example: a single subscription-scoped consumption budget.
+# Example: one $100 budget covering Azure OpenAI + Azure AI Foundry across two
+# resource groups in the same subscription, alerting two people by email.
 #
-# This is the root module, so THIS is where the provider is configured -- the
-# reusable module deliberately contains no provider block.
+#   subscription
+#     |
+#     +-- rg-ai-one ---- Azure OpenAI account      \
+#     |                  Azure AI Foundry account   |  4 resource IDs,
+#     +-- rg-ai-two ---- Azure OpenAI account       |  ONE $100 budget
+#                        Azure AI Foundry account  /
+#
+# The budget is SUBSCRIPTION-scoped so a single $100 limit spans both resource
+# groups, then narrowed with a `ResourceId` filter to exactly those four
+# accounts. Anything else in the subscription is ignored.
+#
+# Why subscription scope rather than two resource group budgets: a resource
+# group budget cannot span two resource groups, so two of them would mean two
+# independent $100 limits ($200 of exposure). One filtered subscription budget
+# gives a single shared $100 ceiling.
 ###############################################################################
 
 terraform {
@@ -19,8 +33,6 @@ terraform {
 provider "azurerm" {
   features {}
 
-  # azurerm 4.x requires an explicit subscription for the provider itself.
-  # Supplied by the caller (variable / ARM_SUBSCRIPTION_ID), never hardcoded.
   subscription_id = var.subscription_guid
 }
 
@@ -28,33 +40,39 @@ module "consumption_budgets" {
   source = "../../"
 
   budgets = {
-    platform = {
-      scope_type = "subscription"
-
-      # Full resource ID form. azurerm 4.x validates with
-      # commonids.ValidateSubscriptionID, so a bare GUID is rejected.
+    ai_platform = {
+      scope_type      = "subscription"
       subscription_id = "/subscriptions/${var.subscription_guid}"
 
-      name       = "budget-platform"
-      amount     = 5000
+      name       = "budget-ai-platform"
+      amount     = var.budget_amount
       time_grain = "Monthly"
 
-      # Required by the provider: MinItems 1, MaxItems 1.
-      # start_date must be the first of a month, RFC3339, >= 2017-06-01.
       time_period = {
         start_date = var.budget_start_date
       }
 
-      # Map keys ("warning") are Terraform-side labels only; they are never
-      # sent to Azure. They exist so that adding "critical" later does not
-      # churn the existing notification.
+      # Alert once actual spend across the four accounts passes the amount.
+      # threshold is a PERCENTAGE of `amount`, so 100 means "100% of $100".
       notifications = {
-        warning = {
-          threshold      = 80
+        exceeded = {
+          threshold      = 100
           operator       = "GreaterThan"
           threshold_type = "Actual"
           contact_emails = var.budget_contact_emails
         }
+      }
+
+      # Count only the four AI accounts. `ResourceId` is one of the 24
+      # dimensions Azure supports, and the values are your own resource IDs --
+      # no billing meter names to guess at.
+      filter = {
+        dimension = [
+          {
+            name   = "ResourceId"
+            values = var.ai_resource_ids
+          },
+        ]
       }
     }
   }
@@ -63,4 +81,9 @@ module "consumption_budgets" {
 output "budget_ids" {
   description = "Logical budget key -> Azure budget resource ID."
   value       = module.consumption_budgets.budget_ids
+}
+
+output "filtered_resource_ids" {
+  description = "The resource IDs this budget counts. Compare these against Cost analysis grouped by Resource to confirm the filter matches."
+  value       = var.ai_resource_ids
 }
