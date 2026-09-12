@@ -1,0 +1,20 @@
+# Terraform working directories and provider plugins
+.terraform/
+.terraform.tfstate.lock.info
+
+# State (this module should never hold state; examples are for local runs only)
+*.tfstate
+*.tfstate.*
+
+# Plan output
+*.tfplan
+
+# Local variable files that may contain environment-specific or sensitive values
+*.auto.tfvars
+*.auto.tfvars.json
+terraform.tfvars
+terraform.tfvars.json
+
+# Crash logs
+crash.log
+crash.*.log
