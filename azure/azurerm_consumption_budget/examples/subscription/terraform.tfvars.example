@@ -1,0 +1,30 @@
+# Copy to terraform.tfvars and fill in your real values.
+#   cp terraform.tfvars.example terraform.tfvars
+#
+# terraform.tfvars is gitignored; this template is not.
+
+subscription_guid = "00000000-0000-0000-0000-000000000000"
+
+# The four Azure OpenAI / Azure AI Foundry accounts the budget counts.
+# Paste each full resource ID exactly as Azure reports it:
+#   az resource list \
+#     --resource-type Microsoft.CognitiveServices/accounts \
+#     --query "[].id" -o tsv
+ai_resource_ids = [
+  # --- rg-ai-one ---
+  "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-ai-one/providers/Microsoft.CognitiveServices/accounts/oai-ai-one",
+  "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-ai-one/providers/Microsoft.CognitiveServices/accounts/aif-ai-one",
+
+  # --- rg-ai-two ---
+  "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-ai-two/providers/Microsoft.CognitiveServices/accounts/oai-ai-two",
+  "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-ai-two/providers/Microsoft.CognitiveServices/accounts/aif-ai-two",
+]
+
+# The two people who get the alert.
+budget_contact_emails = [
+  "alice@example.com",
+  "bob@example.com",
+]
+
+budget_amount     = 100
+budget_start_date = "2026-10-01T00:00:00Z"
