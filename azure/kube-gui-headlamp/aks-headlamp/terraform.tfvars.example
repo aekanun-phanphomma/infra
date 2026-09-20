@@ -1,0 +1,46 @@
+################################################################################
+# Copy to terraform.tfvars and fill in. Do NOT commit terraform.tfvars.
+#
+# The client secret is deliberately absent from this file. Pass it through the
+# environment instead, or better, do not pass it to Terraform at all and use
+# oidc_existing_secret_name:
+#
+#   export TF_VAR_oidc_client_secret='...'
+################################################################################
+
+# ---------------------------------------------------------------- connection
+kubeconfig_path    = "~/.kube/config"
+kubeconfig_context = "aks-prod-weu"
+
+# -------------------------------------------------------------- Entra ID
+# Directory (tenant) ID from the Entra portal overview.
+tenant_id = "00000000-0000-0000-0000-000000000000"
+
+# Application (client) ID of the Headlamp App Registration. Created externally.
+oidc_client_id = "11111111-1111-1111-1111-111111111111"
+
+# Recommended: a Secret already present in the headlamp namespace holding
+# OIDC_CLIENT_ID, OIDC_CLIENT_SECRET and OIDC_ISSUER_URL.
+oidc_existing_secret_name = "headlamp-oidc"
+
+# ------------------------------------------------------------------ ingress
+headlamp_hostname       = "headlamp.example.com"
+ingress_class_name      = "nginx"
+ingress_tls_secret_name = "headlamp-tls"
+
+ingress_annotations = {
+  # Example only. Use the annotations your own controller understands.
+  "nginx.ingress.kubernetes.io/force-ssl-redirect" = "true"
+}
+
+# ------------------------------------------------------- Entra group object IDs
+# Object IDs, not display names. Read them with:
+#   az ad group show --group adgroup-aks-admin --query id -o tsv
+group_object_ids = {
+  aks_admin      = "22222222-2222-2222-2222-222222222222"
+  aks_read       = "33333333-3333-3333-3333-333333333333"
+  aks_write      = "44444444-4444-4444-4444-444444444444"
+  app_a_read     = "55555555-5555-5555-5555-555555555555"
+  app_a_write    = "66666666-6666-6666-6666-666666666666"
+  app_a_operator = "77777777-7777-7777-7777-777777777777"
+}
