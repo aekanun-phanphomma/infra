@@ -1,0 +1,23 @@
+# Terraform state contains secret material when the module creates the OIDC
+# Secret. Never commit it.
+*.tfstate
+*.tfstate.*
+.terraform/
+
+# Real variable values, including any client secret.
+terraform.tfvars
+*.auto.tfvars
+!terraform.tfvars.example
+
+crash.log
+*.tfplan
+override.tf
+override.tf.json
+
+# Provider lock files belong in version control for root modules such as
+# examples/aks-headlamp, so they are deliberately NOT ignored here. A reusable
+# module should not carry one; the one below is a local validation artefact.
+modules/headlamp/.terraform.lock.hcl
+
+# The vendored chart under modules/headlamp/charts IS tracked on purpose.
+# It is what gets installed, so it must be reviewable in the repository.
